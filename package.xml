@@ -5,7 +5,8 @@
   <version>0.0.1</version>
   <description>ROS2 HMC5883l driver. Publishing /imu/mag topic</description>
   <maintainer email="thipok17@gmail.com">Thipok Jiamjarapan</maintainer>
-
+  <license>TODO: License declaration</license>
+  
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <test_depend>ament_lint_auto</test_depend>
