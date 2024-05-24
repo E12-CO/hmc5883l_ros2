@@ -14,7 +14,7 @@ class HMC5883Driver : public rclcpp::Node {
   std::unique_ptr<HMC5883Sensor> hmc5883_;
   size_t count_;
   rclcpp::TimerBase::SharedPtr timer_;
-  void handleInput();
+  void magCallback();
 };
 
 #endif  // HMC5883DRIVER_H

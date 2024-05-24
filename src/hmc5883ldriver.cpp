@@ -3,6 +3,10 @@
 #include <chrono>
 #include <memory>
 
+// Define read back Loop time 
+#define LOOP_TIME_MIL   33 // 33ms -> 30Hz
+#define LOOP_TIME_SEC	LOOP_TIME_MIL/1000 // Loop time in second
+
 using namespace std::chrono_literals;
 
 HMC5883Driver::HMC5883Driver()
@@ -10,20 +14,25 @@ HMC5883Driver::HMC5883Driver()
 {
   // Create publisher
   publisher_ = this->create_publisher<sensor_msgs::msg::MagneticField>("imu/mag", 10);
-  std::chrono::duration<int64_t, std::milli> frequency =
-      1000ms / 100;
-  timer_ = this->create_wall_timer(frequency, std::bind(&HMC5883Driver::handleInput, this));
+  
+  // Wall timer for sensor read back
+  timer_ = this->create_wall_timer(
+	std::chrono::milliseconds(LOOP_TIME_MIL), 
+	std::bind(&HMC5883Driver::magCallback, this)
+	);
 }
 
-void HMC5883Driver::handleInput()
+void HMC5883Driver::magCallback()
 {
   auto message = sensor_msgs::msg::MagneticField();
   message.header.stamp = this->get_clock()->now();
   message.header.frame_id = "imu_link";
   
-  message.magnetic_field.x = hmc5883_->getMagneticX();
-  message.magnetic_field.y = hmc5883_->getMagneticY();
-  message.magnetic_field.z = hmc5883_->getMagneticZ();
+  hmc5883_->getMagneticAll();
+  
+  message.magnetic_field.x = hmc5883_->getTelsaX();
+  message.magnetic_field.y = hmc5883_->getTelsaY();
+  message.magnetic_field.z = hmc5883_->getTelsaZ();
   
   publisher_->publish(message);
 }

@@ -12,6 +12,10 @@ extern "C" {
 
 #include <iostream>
 
+#define GAUSS_PER_BIT	1090
+#define GAUSS_TO_TESLA	0.0001
+
+
 HMC5883Sensor::HMC5883Sensor(int bus_number)
 {
   // TODO: make char append cleaner
@@ -28,12 +32,54 @@ HMC5883Sensor::HMC5883Sensor(int bus_number)
     exit(1);
   }
   // Set sensor into continuous mode
-  int result = i2c_smbus_write_byte_data(file_, 0x02, 0x00);// Might check for Endianness 
+  // Set Config register A
+  int result = i2c_smbus_write_byte_data(file_, 0x00, 0x74);// 8 sample averaging and 30Hz update rate
+  if (result < 0) reportError(errno);
+  // Continuous measurement mode
+  int result = i2c_smbus_write_byte_data(file_, 0x02, 0x00);
   if (result < 0) reportError(errno);
 
 }
 
 HMC5883Sensor::~HMC5883Sensor() { close(file_); }
+
+void HMC5883Sensor::getMagneticAll(){
+	int result;
+	result = i2c_smbus_read_i2c_block_data_or_emulated(file_, 0x06, 6, &read_buffer);
+	if (result < 0) reportError(errno);
+	result = i2c_smbus_read_byte_data(file_, 0x03);// Point the internal data pointer of the HMC5883L back to register 0x03
+	if (result < 0) reportError(errno);
+}
+
+double HMC5883Sensor::getTelsaX() const{
+	int itemp_x;
+	double dtemp_x;
+	
+	itemp_x = (read_buffer[1] | (read_buffer[0] << 8));// Get data from buffer and convert to double
+	dtemp_x = (itemp_x  / GAUSS_PER_BIT) * GAUSS_TO_TESLA;// Convert raw value to Gauss to Tesla
+	
+	return dtemp_x;
+}
+
+double HMC5883Sensor::getTelsaY() const{
+	int itemp_y;
+	double dtemp_y;
+	
+	itemp_y = (read_buffer[5] | (read_buffer[4] << 8));// Get data from buffer and convert to double
+	dtemp_y = (itemp_y  / GAUSS_PER_BIT) * GAUSS_TO_TESLA;// Convert raw value to Gauss to Tesla
+
+	return dtemp_y;
+}
+
+double HMC5883Sensor::getTelsaZ() const{
+	int itemp_z;
+	double dtemp_z;
+	
+	itemp_z = (read_buffer[3] | (read_buffer[2] << 8));// Get data from buffer and convert to double
+	dtemp_z = (itemp_z  / GAUSS_PER_BIT) * GAUSS_TO_TESLA;// Convert raw value to Gauss to Tesla
+
+	return dtemp_z;	
+}
 
 double HMC5883Sensor::getMagneticX() const
 {

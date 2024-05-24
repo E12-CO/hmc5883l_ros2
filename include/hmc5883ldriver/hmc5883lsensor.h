@@ -8,6 +8,12 @@ class HMC5883Sensor {
  public:
   HMC5883Sensor(int bus_number = 3);
   ~HMC5883Sensor();
+	
+  void getMagneticAll();
+
+  double getTelsaX() const;
+  double getTelsaY() const;
+  double getTelsaZ() const;
 
   double getMagneticX() const;
   double getMagneticY() const;
@@ -18,6 +24,8 @@ class HMC5883Sensor {
 
   int file_;
   char filename_[10] = "/dev/i2c-";
+  
+  uint8_t read_buffer[6];
 
   // HMC5883 registers and addresses (s. datasheet for details)
   static constexpr int HMC5883_ADDRESS_DEFAULT = 0x1E;
