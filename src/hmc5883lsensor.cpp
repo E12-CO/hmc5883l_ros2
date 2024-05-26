@@ -36,7 +36,7 @@ HMC5883Sensor::HMC5883Sensor(int bus_number)
   int result = i2c_smbus_write_byte_data(file_, 0x00, 0x74);// 8 sample averaging and 30Hz update rate
   if (result < 0) reportError(errno);
   // Continuous measurement mode
-  int result = i2c_smbus_write_byte_data(file_, 0x02, 0x00);
+   result = i2c_smbus_write_byte_data(file_, 0x02, 0x00);
   if (result < 0) reportError(errno);
 
 }
@@ -44,9 +44,22 @@ HMC5883Sensor::HMC5883Sensor(int bus_number)
 HMC5883Sensor::~HMC5883Sensor() { close(file_); }
 
 void HMC5883Sensor::getMagneticAll(){
+	struct i2c_smbus_ioctl_data ioctl_data;
+	union i2c_smbus_data smbus_data;
+
+	smbus_data.block[0] = 6;// Set datablock to 6 bytes
+
+	ioctl_data.read_write = I2C_SMBUS_READ;
+	ioctl_data.command = 0x06;
+	ioctl_data.size    = I2C_SMBUS_I2C_BLOCK_DATA;
+	ioctl_data.data    = &smbus_data;
+
+
 	int result;
-	result = i2c_smbus_read_i2c_block_data_or_emulated(file_, 0x06, 6, &read_buffer);
+	result = ioctl(file_, I2C_SMBUS, &ioctl_data);
+//	result = i2c_smbus_read_i2c_block_data_or_emulated(file_, 0x06, 6, &read_buffer);
 	if (result < 0) reportError(errno);
+	memcpy(read_buffer, smbus_data.block+1, 6);
 	result = i2c_smbus_read_byte_data(file_, 0x03);// Point the internal data pointer of the HMC5883L back to register 0x03
 	if (result < 0) reportError(errno);
 }
