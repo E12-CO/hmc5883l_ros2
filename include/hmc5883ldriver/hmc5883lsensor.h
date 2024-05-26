@@ -6,7 +6,7 @@
 
 class HMC5883Sensor {
  public:
-  HMC5883Sensor(int bus_number = 3);
+  HMC5883Sensor(int bus_number = 1);
   ~HMC5883Sensor();
 	
   void getMagneticAll();
